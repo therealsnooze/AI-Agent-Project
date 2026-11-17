@@ -57,56 +57,12 @@ user request ──► LLM integration ──► Interpreter ──► Validate 
 | DESTRUCTIVE | overwrite, delete, UPDATE/DELETE/DROP/ALTER | **always** asks; shows a diff or dry-run row count |
 | BLOCKED | `../` paths, `rm -rf`, non-allowlisted hosts, multi-statement SQL, ATTACH, PRAGMA writes | never runs; the reason is returned to the model so it can adapt |
 
-## Run it locally
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
-pip install -r requirements-dev.txt
-
-# Web UI (opens http://localhost:8501). Paste your API key in the sidebar,
-# or put it in .streamlit/secrets.toml (see secrets.toml.example).
-streamlit run app.py
-
-# Terminal UI
-set ANTHROPIC_API_KEY=sk-ant-...  # macOS/Linux: export ANTHROPIC_API_KEY=...
-python cli.py --effort medium     # add --strict to approve every change
-
-# Tests (no API key needed — the LLM is mocked)
-pytest -q
-```
-
-## Share it with a URL (Streamlit Community Cloud, free)
-
-1. Push this folder to a GitHub repository.
-2. Go to <https://share.streamlit.io>, sign in with GitHub, click **Create app** → *Deploy a public app from GitHub*.
-3. Select the repo, branch `main`, main file `app.py`. Under **Advanced settings** pick Python 3.12 and paste:
-   ```toml
-   ANTHROPIC_API_KEY = "sk-ant-..."
-   OPSPILOT_PASSCODE = "a-passcode-you-give-your-class"
-   ```
-4. Deploy. You get a URL like `https://<your-app>.streamlit.app`.
-
-With a passcode set, visitors must enter it to use your key (or paste their own key), so strangers can't spend
-your credits. Each visitor gets an isolated sandbox, and each session is capped at 80 model calls
-(`OPSPILOT_MAX_REQUESTS`).
-
 ## Configuration
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | — | API key (env var or Streamlit secret) |
-| `OPSPILOT_PASSCODE` | — | Gate for using the server key on a public deployment |
+| `OPSPILOT_PASSCODE` | `password` | Gate for using the server key on a public deployment |
 | `OPSPILOT_MODEL` | `claude-opus-5-5` | Default model (Sonnet 5.5 and Haiku 5.5 are selectable in the UI) |
 | `OPSPILOT_EFFORT` | `medium` | Default reasoning effort |
 | `OPSPILOT_MAX_REQUESTS` | `80` | Model calls allowed per session |
-
-## Demo
-
-See [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) for a 6-minute live-demo run sheet that hits every requirement.
-
-## Tests
-
-`pytest -q` runs 56 tests covering the sandbox, SQL classification and dry runs, URL and command allowlists,
-schema validation, the approve/deny/block flows of the agent loop, the exact HTTP request sent through the real
-Anthropic SDK (via a mock transport), API error mapping, and a headless run of the Streamlit UI.
